@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys
 
 INF=10e15
 
@@ -33,7 +34,7 @@ class State:
         if self.h != -1:
             return self.h
         self.h = heruistic_estimate(self.state, solved_state)
-        return h
+        return self.h
 
     def getScore(self, solved_state):
         return self.getG() + self.getH(solved_state)
@@ -69,7 +70,7 @@ class State:
         return hash(s)#, self.moves))
 
     def __eq__(self, other):
-        return (self.state, self.moves) == (other.state, other.moves)
+        return (self.state) == (other.state)
 
     def __ne__(self, other):
         return not (self == other)
@@ -80,6 +81,10 @@ class HashSet:
 
     def add(self, elem):
         self.table[elem] = 1
+
+    def getElem(self):
+        for key in self.table.keys():
+            return key
 
     def __iter__(self):
         yield next(iter(self.table))
@@ -96,7 +101,10 @@ class HashSet:
             return False
 
     def remove(self, elem):
-        self.table.pop(elem)
+        try:
+            self.table.pop(elem)
+        except KeyError:
+            pass
 
 def get_with_default(container, key, default):
     try:
@@ -105,15 +113,8 @@ def get_with_default(container, key, default):
         return default
 
 def select_optimal_state(f_score, states, solved_state):
-    # optimal = states[0]
-    # optimal_score = optimal.getScore(solved_state)
-    # for state in states:
-    #     current_score = state.getScore(solved_state)
-    #     if current_score < optimal_score:
-    #         optimal = state
-    #         optimal_score = current_score
-    optimal = next(iter(states))
-    optimal_score = heruistic_estimate(optimal.state, solved_state)
+    optimal = states.getElem()
+    optimal_score = get_with_default(f_score, optimal, INF)
     for state in states:
         state_f_score = get_with_default(f_score, state, INF)
         if state_f_score < optimal_score:
@@ -128,37 +129,38 @@ def solve(initial_state, solved_state):
     solved = False
     opened_states = HashSet()
     opened_states.add(State(initial_state, 0))
-    first_item = next(iter(opened_states))
+    first_item = opened_states.getElem()
     g_score[first_item] = 0
     f_score[first_item] = heruistic_estimate(first_item.state, solved_state)
     closed_states = HashSet()
     while not solved and len(opened_states) >= 1:
         e = select_optimal_state(f_score, opened_states, solved_state)
-        print(e.state)
-        # print("closed_states: ", len(closed_states))
         if e.state == solved_state:
             print("solved: ", e.state)
-            break
+            solved = True
+            return 
         else:
             opened_states.remove(e)
             closed_states.add(e)
             for s in e.makeMoves():
                 if s in closed_states:
+                    # print("repeat: ", repr(s.state).replace("]", "\\]").replace("[", "\\["))
+                    print(repr(s.state).replace("]", "\\]").replace("[", "\\["))
                     continue
                 if s not in opened_states:
+                    print("add: ", s.state, file=sys.stderr)
                     opened_states.add(s)
-                test_score = get_with_default(g_score, e, INF) + 1
-                if test_score >= get_with_default(g_score, s, INF):
+                test_score = g_score.get(e, INF) + 1
+                if test_score >= g_score.get(s, INF):
                     continue
                 came_from[s] = e
                 g_score[s] = test_score
-                # print("estimate: ", heruistic_estimate(s.state, solved_state));
                 f_score[s] = test_score + heruistic_estimate(s.state, solved_state)
-                # print("score: ", g_score[s], f_score[s])
+            # print("opened_states: ", len(opened_states), "closed_states: ", len(closed_states), "score: ", g_score[s], f_score[s] - g_score[s], f_score[s])
     print("cant solve")
 
 def main():
-    initial_state = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
+    initial_state = [[0, 1, 2], [5, 6, 3], [4, 7, 8]]
     solved_state = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
     solve(initial_state, solved_state)
 
