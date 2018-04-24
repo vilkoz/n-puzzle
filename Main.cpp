@@ -74,22 +74,22 @@ int main(int c, char **v)
 		return 1;
 	}
 
-	if (n->isSolvable() == false)
-	{
-		std::cout << "Npuzzle is unsolvable" << std::endl;
-		return 2;
-	}
+	/* if (n->isSolvable() == false) */
+	/* { */
+	/* 	std::cout << "Npuzzle is unsolvable" << std::endl; */
+	/* 	return 2; */
+	/* } */
 
 	std::vector<std::shared_ptr<Npuzzle>> result_moves;
 	std::chrono::time_point<std::chrono::system_clock> start, end;
 
 
 	start = std::chrono::system_clock::now();
-	if (config.algorithmType == ALGO_A_SEARCH)
+	if (config.algorithmType == ALGO_ROW)
 		result_moves = aRow(n);
 	else if (config.algorithmType == ALGO_MANHATTAN)
 		result_moves = aManhattan(n);
-	else if (config.algorithmType == ALGO_ROW)
+	else if (config.algorithmType == ALGO_A_SEARCH)
 		result_moves = aSearch(n);
 	end = std::chrono::system_clock::now();
 

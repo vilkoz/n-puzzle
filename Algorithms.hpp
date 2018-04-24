@@ -161,7 +161,7 @@ std::vector<std::shared_ptr<Npuzzle>> aSearch(std::shared_ptr<Npuzzle> n)
             return (lhs->getG() + lhs->getH()) < (rhs->getG() + rhs->getH());
         });
 
-        if ((((items[0])->getH()) == 0))
+        if ((items[0])->getH() == 0)
 		{
             solve = true;
 		}
@@ -172,6 +172,7 @@ std::vector<std::shared_ptr<Npuzzle>> aSearch(std::shared_ptr<Npuzzle> n)
         }
 
         std::cout << items.size() << " " << items[0]->getG() << " " << items[0]->getH() << std::endl;
+		std::cout << *(items[0]) << std::endl;
     }
 
     std::vector<std::shared_ptr<Npuzzle>> result = items[0]->getMoves();
