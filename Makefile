@@ -1,6 +1,6 @@
 NAME = Npuzzle
 
-SRC = Main.cpp Npuzzle.cpp
+SRC = Main.cpp Npuzzle.cpp Argparser.cpp
 
 OB = $(SRC:.cpp=.o)
 
