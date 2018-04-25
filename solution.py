@@ -47,12 +47,14 @@ class State:
         next_state = State(arr, self.moves + 1)
         return next_state
 
-    def makeMoves(self):
-        empty_coord = [0, 0]
+    def findEmpty(self):
         for i in range(len(self.state)):
             for j in range(len(self.state[i])):
                 if self.state[i][j] == 0:
-                    empty_coord = [j, i]
+                    return i, j
+
+    def makeMoves(self):
+        empty_coord = self.findEmpty()
         moves = []
         if empty_coord[0] > 0:
             moves.append(self._makeMove(empty_coord, [-1,  0]))
@@ -66,8 +68,7 @@ class State:
 
     def __hash__(self):
         s = "".join([str(x) for x in sum(self.state, [])])
-        # print(s)
-        return hash(s)#, self.moves))
+        return hash(s)
 
     def __eq__(self, other):
         return (self.state) == (other.state)
@@ -75,14 +76,47 @@ class State:
     def __ne__(self, other):
         return not (self == other)
 
+    def __repr__(self):
+        # s = ""
+        # for row in self.state:
+        #     for item in row:
+        #         s += str(item) + " "
+        #     s += "\n"
+        # s += "moves: " + str(self.moves)
+        s = "State("
+        s += "["
+        for row in self.state:
+            s += "["
+            for item in row:
+                s += " " + str(item) + ","
+            s += "]"
+        s += "], "
+        s += "moves: " + str(self.moves) + ")"
+        return s
+
+    def __lt__(self, value):
+        # print("------------------------------------------------------------")
+        # print("performing comparsion")
+        # print(F_SCORE.get(self, INF), F_SCORE.get(value, INF))
+        # print("------------------------------------------------------------")
+        return F_SCORE.get(self, INF) < F_SCORE.get(value, INF)
+
+from sortedcontainers import SortedDict
+
+F_SCORE=None
+
 class HashSet:
     def __init__(self):
         self.table = {}
+        # self.table = SortedDict({})
 
     def add(self, elem):
+        # print("table items before insert: ", self.table.items())
         self.table[elem] = 1
+        # print("table items after insert: ", self.table.items())
 
     def getElem(self):
+        # return self.table.keys()[0]
         for key in self.table.keys():
             return key
 
@@ -101,10 +135,14 @@ class HashSet:
             return False
 
     def remove(self, elem):
-        try:
+        # print("table items before remove: ", self.table.items())
+        if elem in self.table:
+            # print("removing: ", elem, "from table:", self.table)
             self.table.pop(elem)
-        except KeyError:
-            pass
+        # print("table items after remove: ", self.table.items())
+        # if elem in self.table:
+        #     raise ValueError("NOT REMOVED ELEM")
+        # print("table after removing: ", self.table)
 
 def get_with_default(container, key, default):
     try:
@@ -114,17 +152,34 @@ def get_with_default(container, key, default):
 
 def select_optimal_state(f_score, states, solved_state):
     optimal = states.getElem()
-    optimal_score = get_with_default(f_score, optimal, INF)
+    optimal_score = f_score.get(optimal, INF)
     for state in states:
-        state_f_score = get_with_default(f_score, state, INF)
+        state_f_score = f_score.get(state, INF)
         if state_f_score < optimal_score:
             optimal = state
             optimal_score = state_f_score
+    print("optimal_score: ", optimal_score)
     return optimal
 
+def reconstruct_path(came_from, state):
+    path = [state]
+    end = False
+    current_state = state
+    while not end:
+        try:
+            path.append(came_from[current_state])
+            current_state = path[-1]
+        except KeyError:
+            end = True
+    print("solution path:")
+    for item in reversed(path):
+        print(item)
+
 def solve(initial_state, solved_state):
+    global F_SCORE
     g_score = {}
     f_score = {}
+    F_SCORE = f_score
     came_from = {}
     solved = False
     opened_states = HashSet()
@@ -135,8 +190,10 @@ def solve(initial_state, solved_state):
     closed_states = HashSet()
     while not solved and len(opened_states) >= 1:
         e = select_optimal_state(f_score, opened_states, solved_state)
+        print(e)
         if e.state == solved_state:
             print("solved: ", e.state)
+            reconstruct_path(came_from, e)
             solved = True
             return 
         else:
@@ -144,11 +201,8 @@ def solve(initial_state, solved_state):
             closed_states.add(e)
             for s in e.makeMoves():
                 if s in closed_states:
-                    # print("repeat: ", repr(s.state).replace("]", "\\]").replace("[", "\\["))
-                    print(repr(s.state).replace("]", "\\]").replace("[", "\\["))
                     continue
                 if s not in opened_states:
-                    print("add: ", s.state, file=sys.stderr)
                     opened_states.add(s)
                 test_score = g_score.get(e, INF) + 1
                 if test_score >= g_score.get(s, INF):
@@ -156,7 +210,7 @@ def solve(initial_state, solved_state):
                 came_from[s] = e
                 g_score[s] = test_score
                 f_score[s] = test_score + heruistic_estimate(s.state, solved_state)
-            # print("opened_states: ", len(opened_states), "closed_states: ", len(closed_states), "score: ", g_score[s], f_score[s] - g_score[s], f_score[s])
+            print("opened_states: ", len(opened_states), "closed_states: ", len(closed_states), "score: ", g_score[s], f_score[s] - g_score[s], f_score[s])
     print("cant solve")
 
 def main():
