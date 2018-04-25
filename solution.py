@@ -89,13 +89,16 @@ class State:
     def __ne__(self, other):
         return not (self == other)
 
+    def print(self):
+        s = ""
+        for row in self.state:
+            for item in row:
+                s += str(item) + " "
+            s += "\n"
+        s += "moves: " + str(self.moves)
+        print(s)
+
     def __repr__(self):
-        # s = ""
-        # for row in self.state:
-        #     for item in row:
-        #         s += str(item) + " "
-        #     s += "\n"
-        # s += "moves: " + str(self.moves)
         s = "State("
         s += "["
         for row in self.state:
@@ -108,11 +111,6 @@ class State:
         return s
 
     def __lt__(self, value):
-        # print("------------------------------------------------------------")
-        # print("performing comparsion")
-        # print(self, value)
-        # print(F_SCORE.get(self, INF), F_SCORE.get(value, INF))
-        # print("------------------------------------------------------------")
         return F_SCORE.get(self, INF) < F_SCORE.get(value, INF)
 
 from bisect import bisect_left, bisect_right
@@ -132,12 +130,9 @@ class HashSet:
             self.keys_list.append(elem)
         else:
             self.keys_list.insert(pos, elem)
-        # print("list after add: ", self.keys_list)
 
     def getElem(self):
         return self.keys_list[0]
-        # for key in self.table.keys():
-        #     return key
 
     def __iter__(self):
         yield next(iter(self.table))
@@ -157,16 +152,12 @@ class HashSet:
         if elem in self.table:
             self.table.pop(elem)
 
-        # print("elem: ", elem)
-        # print("list before remove: ", self.keys_list)
         pos = self.keys_list.index(elem)
         if pos == len(self.keys_list):
             pos -= 1
-            # print("pos: ", pos);
             if self.keys_list[pos] != elem:
                 raise KeyError("Value " + repr(elem) + " not in HashSet")
         self.keys_list.pop(pos)
-        # print("list after remove: ", self.keys_list, pos)
 
         if elem in self.table:
             raise ValueError("NOT REMOVED ELEM")
@@ -178,14 +169,6 @@ def get_with_default(container, key, default):
         return default
 
 def select_optimal_state(f_score, states, solved_state):
-    # optimal = states.getElem()
-    # optimal_score = f_score.get(optimal, INF)
-    # for state in states:
-    #     state_f_score = f_score.get(state, INF)
-    #     if state_f_score < optimal_score:
-    #         optimal = state
-    #         optimal_score = state_f_score
-    # print("optimal_score: ", optimal_score)
     optimal = states.getElem()
     return optimal
 
@@ -201,11 +184,11 @@ def reconstruct_path(came_from, state):
             end = True
     print("solution path:")
     for item in reversed(path):
-        print(item)
+        item.print()
 
-def shuffle(solved_state):
+def shuffle(solved_state, times):
     s = State(solved_state, 0)
-    for _ in range(0, 1000):
+    for _ in range(0, times):
         tmp = s.makeOneRandomMove()
         if tmp:
             s = tmp
@@ -215,42 +198,54 @@ def solve(initial_state, solved_state):
     global F_SCORE
     g_score = {}
     f_score = {}
-    F_SCORE = f_score
     came_from = {}
-    solved = False
+    F_SCORE = f_score
     opened_states = HashSet()
+    closed_states = HashSet()
+
     opened_states.add(State(initial_state, 0))
     first_item = opened_states.getElem()
     g_score[first_item] = 0
     f_score[first_item] = heruistic_estimate(first_item.state, solved_state)
-    closed_states = HashSet()
+
+    explored_states = 0
+    solved = False
     while not solved and len(opened_states) >= 1:
         e = select_optimal_state(f_score, opened_states, solved_state)
+        explored_states += 1
         print(e)
         if e.state == solved_state:
-            print("solved: ", e.state)
+            print("solved: ", e.state, "explored_states:", explored_states)
             reconstruct_path(came_from, e)
             solved = True
             return 
-        else:
-            opened_states.remove(e)
-            closed_states.add(e)
-            for s in e.makeMoves():
-                if s in closed_states:
-                    continue
-                if s not in opened_states:
-                    opened_states.add(s)
-                test_score = g_score.get(e, INF) + 1
-                if test_score >= g_score.get(s, INF):
-                    continue
-                came_from[s] = e
-                g_score[s] = test_score
-                f_score[s] = test_score + heruistic_estimate(s.state, solved_state)
-            print("opened_states: ", len(opened_states), "closed_states: ", len(closed_states), "score: ", g_score[s], f_score[s] - g_score[s], f_score[s])
+        opened_states.remove(e)
+        closed_states.add(e)
+        for s in e.makeMoves():
+            test_score = g_score.get(e, INF) + 1
+            if test_score >= g_score.get(s, INF):
+                continue
+            came_from[s] = e
+            g_score[s] = test_score
+            f_score[s] = test_score + heruistic_estimate(s.state, solved_state)
+            if s in closed_states:
+                continue
+            if s not in opened_states:
+                opened_states.add(s)
+        if e in f_score and e in g_score:
+            print("opened_states: ", len(opened_states), "closed_states: ", len(closed_states), "score: ", g_score[e], f_score[e] - g_score[e], f_score[e])
     print("cant solve")
 
 def main():
     # initial_state = [[0, 1, 2], [5, 6, 3], [4, 7, 8]]
+    # initial_state = [
+    #         [1, 3, 5],
+    #         [4, 0, 2],
+    #         [7, 8, 6]]
+    # initial_state = [
+    #         [8, 3, 1],
+    #         [7, 2, 5],
+    #         [4, 6, 0]]
     # initial_state = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
     # solved_state = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
     # initial_state = [
@@ -259,13 +254,17 @@ def main():
     #         [ 8, 9,10,11],
     #         [12,13,14,15],
     #         ]
-    solved_state = [
-            [ 1, 2, 3, 4],
-            [ 5, 6, 7, 8],
-            [ 9,10,11,12],
-            [13,14,15, 0],
-            ]
-    initial_state = shuffle(solved_state).state
+    # solved_state = [
+    #         [ 1, 2, 3, 4],
+    #         [ 5, 6, 7, 8],
+    #         [ 9,10,11,12],
+    #         [13,14,15, 0],
+    #         ]
+    size = 3
+    solved_state = [[y + x * size for y in range(1, 1 + size)] for x in range(size)]
+    solved_state[-1][-1] = 0
+    print(solved_state)
+    initial_state = shuffle(solved_state, 100).state
     print(initial_state)
     solve(initial_state, solved_state)
 
