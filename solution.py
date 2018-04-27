@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 from random import randint
+from npuzzle_view import NpuzzleView
 
 INF=10e15
 
@@ -182,9 +183,10 @@ def reconstruct_path(came_from, state):
             current_state = path[-1]
         except KeyError:
             end = True
-    print("solution path:")
-    for item in reversed(path):
-        item.print()
+    # print("solution path:")
+    # for item in reversed(path):
+    #     item.print()
+    return [x.state for x in reversed(path)]
 
 def shuffle(solved_state, times):
     s = State(solved_state, 0)
@@ -209,16 +211,13 @@ def solve(initial_state, solved_state):
     f_score[first_item] = heruistic_estimate(first_item.state, solved_state)
 
     explored_states = 0
-    solved = False
-    while not solved and len(opened_states) >= 1:
+    while len(opened_states) >= 1:
         e = select_optimal_state(f_score, opened_states, solved_state)
         explored_states += 1
         print(e)
         if e.state == solved_state:
             print("solved: ", e.state, "explored_states:", explored_states)
-            reconstruct_path(came_from, e)
-            solved = True
-            return 
+            return reconstruct_path(came_from, e)
         opened_states.remove(e)
         closed_states.add(e)
         for s in e.makeMoves():
@@ -235,6 +234,7 @@ def solve(initial_state, solved_state):
         if e in f_score and e in g_score:
             print("opened_states: ", len(opened_states), "closed_states: ", len(closed_states), "score: ", g_score[e], f_score[e] - g_score[e], f_score[e])
     print("cant solve")
+    return ()
 
 def main():
     # initial_state = [[0, 1, 2], [5, 6, 3], [4, 7, 8]]
@@ -263,10 +263,10 @@ def main():
     size = 3
     solved_state = [[y + x * size for y in range(1, 1 + size)] for x in range(size)]
     solved_state[-1][-1] = 0
-    print(solved_state)
     initial_state = shuffle(solved_state, 100).state
-    print(initial_state)
-    solve(initial_state, solved_state)
+    states = solve(initial_state, solved_state)
+    view = NpuzzleView(states)
+    view.display()
 
 if __name__ == "__main__":
     main()
