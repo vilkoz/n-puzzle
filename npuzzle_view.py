@@ -11,7 +11,7 @@ class NpuzzleView:
         s = ""
         for row in state:
             for item in row:
-                s += str(item) + " "
+                s += ("%3d" % (item)) + " "
             s += "\n"
         print(s, end="")
             
