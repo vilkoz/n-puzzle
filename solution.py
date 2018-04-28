@@ -2,6 +2,7 @@
 import sys
 from random import randint
 from npuzzle_view import NpuzzleView
+from OrderedHashSet import OrderedHashSet
 
 INF=10e15
 
@@ -114,54 +115,7 @@ class State:
     def __lt__(self, value):
         return F_SCORE.get(self, INF) < F_SCORE.get(value, INF)
 
-from bisect import bisect_left, bisect_right
-
 F_SCORE=None
-
-class HashSet:
-    def __init__(self):
-        self.table = {}
-        self.keys_list = []
-
-    def add(self, elem):
-        # print("list before add: ", self.keys_list)
-        self.table[elem] = 1
-        pos = bisect_left(self.keys_list, elem)
-        if pos == len(self.keys_list):
-            self.keys_list.append(elem)
-        else:
-            self.keys_list.insert(pos, elem)
-
-    def getElem(self):
-        return self.keys_list[0]
-
-    def __iter__(self):
-        yield next(iter(self.table))
-
-    def __len__(self):
-        return len(self.table)
-
-    def __contains__(self, key):
-        try:
-            if self.table[key]:
-                pass
-            return True
-        except KeyError:
-            return False
-
-    def remove(self, elem):
-        if elem in self.table:
-            self.table.pop(elem)
-
-        pos = self.keys_list.index(elem)
-        if pos == len(self.keys_list):
-            pos -= 1
-            if self.keys_list[pos] != elem:
-                raise KeyError("Value " + repr(elem) + " not in HashSet")
-        self.keys_list.pop(pos)
-
-        if elem in self.table:
-            raise ValueError("NOT REMOVED ELEM")
 
 def get_with_default(container, key, default):
     try:
@@ -183,9 +137,6 @@ def reconstruct_path(came_from, state):
             current_state = path[-1]
         except KeyError:
             end = True
-    # print("solution path:")
-    # for item in reversed(path):
-    #     item.print()
     return [x.state for x in reversed(path)]
 
 def shuffle(solved_state, times):
@@ -202,8 +153,8 @@ def solve(initial_state, solved_state):
     f_score = {}
     came_from = {}
     F_SCORE = f_score
-    opened_states = HashSet()
-    closed_states = HashSet()
+    opened_states = OrderedHashSet()
+    closed_states = OrderedHashSet()
 
     opened_states.add(State(initial_state, 0))
     first_item = opened_states.getElem()
@@ -237,29 +188,6 @@ def solve(initial_state, solved_state):
     return ()
 
 def main():
-    # initial_state = [[0, 1, 2], [5, 6, 3], [4, 7, 8]]
-    # initial_state = [
-    #         [1, 3, 5],
-    #         [4, 0, 2],
-    #         [7, 8, 6]]
-    # initial_state = [
-    #         [8, 3, 1],
-    #         [7, 2, 5],
-    #         [4, 6, 0]]
-    # initial_state = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
-    # solved_state = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
-    # initial_state = [
-    #         [ 0, 1, 2, 3],
-    #         [ 4, 5, 6, 7],
-    #         [ 8, 9,10,11],
-    #         [12,13,14,15],
-    #         ]
-    # solved_state = [
-    #         [ 1, 2, 3, 4],
-    #         [ 5, 6, 7, 8],
-    #         [ 9,10,11,12],
-    #         [13,14,15, 0],
-    #         ]
     size = 3
     solved_state = [[y + x * size for y in range(1, 1 + size)] for x in range(size)]
     solved_state[-1][-1] = 0
