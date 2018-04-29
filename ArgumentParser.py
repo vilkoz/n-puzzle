@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import argparse
-from Heruistics import manhattan_distance, linear_conflict
+from Heruistics import manhattan_distance, linear_conflict, hamming_distance
 from State import State
 
 def parse_arguments():
@@ -11,8 +11,10 @@ def parse_arguments():
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-f", "--file", type=str, help="file with map")
     group.add_argument("-g", "--generate", type=int, help="generate map with provided size", default=3)
-    parser.add_argument("-a", "--algorithm", type=str, choices=["manhattan", "row", "a_star", "all"],
-            help="algorithm to solve N-puzzle", default="all", required=False)
+    parser.add_argument("-a", "--algorithm", type=str, choices=["manhattan", "linear_conflict", "hamming_distance", "all"],
+            help="heruistics algorithm to solve N-puzzle", default="all", required=False)
+    parser.add_argument("-i", "--iterations", type=int,
+            help="how many times to shuffle board in map generation", default=20, required=False)
     return parser.parse_args();
 
 def generate_solved_state(size):
@@ -29,7 +31,6 @@ def is_state_solvable(state):
         for val in flat[i:]:
             if num != 0 and val != 0 and num > val:
                 inversions += 1
-    print("inversions", inversions)
     if (size % 2) == 0:
         for i, row in enumerate(state):
             if 0 in row:
@@ -93,12 +94,15 @@ def validate_arguments(args):
     if size > 8:
         print("OH MY FUCKING GOD THAT WILL BE FUN TO REBOOT COMPUTER")
     solved_state = generate_solved_state(size)
+    if args.iterations < 0:
+        print("wrong iteration number")
+        sys.exit(1)
     if not initial_state:
-        initial_state = shuffle(solved_state, 40)
+        initial_state = shuffle(solved_state, args.iterations)
     heruistics = {
             "manhattan": manhattan_distance,
-            "row": linear_conflict,
-            "a_star": manhattan_distance
+            "linear_conflict": linear_conflict,
+            "hamming_distance": hamming_distance
             }
     if args.algorithm == "all":
         is_one_algo_used = False

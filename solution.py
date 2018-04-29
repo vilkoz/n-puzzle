@@ -97,10 +97,13 @@ def run_one_solver(initial_state, solved_state, heruistic_estimate, verbose):
 def main():
     args = parse_arguments()
     initial_state, solved_state, selected_heruistics, is_one_algo_used = validate_arguments(args)
+    view = NpuzzleView([initial_state])
+    view.display()
     if is_one_algo_used:
         states = run_one_solver(initial_state, solved_state, selected_heruistics, args.verbose)
     else:
         for heruistic_name in selected_heruistics:
+            print("Solving with %s heruistics" % heruistic_name)
             states = run_one_solver(initial_state, solved_state, selected_heruistics[heruistic_name], args.verbose)
     view = NpuzzleView(states)
     view.display()
