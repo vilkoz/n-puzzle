@@ -20,14 +20,6 @@ def reconstruct_path(came_from, state):
             end = True
     return [x.state for x in reversed(path)]
 
-def shuffle(solved_state, times):
-    s = State(solved_state, 0)
-    for _ in range(0, times):
-        tmp = s.makeOneRandomMove()
-        if tmp:
-            s = tmp
-    return s.state
-
 class NpuzzleSolver:
 
     def __init__(self, initial_state, solved_state, heruistic_estimate, verbose):

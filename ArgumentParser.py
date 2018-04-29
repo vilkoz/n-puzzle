@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import sys
 import argparse
-from Heruistics import heruistic_estimate
+from Heruistics import manhattan_distance
+from State import State
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -68,6 +69,14 @@ def parse_file(file_name):
         raise Exception("Map is not solvable")
     return size, initial_state
 
+def shuffle(solved_state, times):
+    s = State(solved_state, 0)
+    for _ in range(0, times):
+        tmp = s.makeOneRandomMove()
+        if tmp:
+            s = tmp
+    return s.state
+
 def validate_arguments(args):
     if args.file:
         try:
@@ -87,9 +96,9 @@ def validate_arguments(args):
     if not initial_state:
         initial_state = shuffle(solved_state, 40)
     heruistics = {
-            "manhattan": heruistic_estimate,
-            "row": heruistic_estimate,
-            "a_star": heruistic_estimate
+            "manhattan": manhattan_distance,
+            "row": manhattan_distance,
+            "a_star": manhattan_distance
             }
     if args.algorithm == "all":
         is_one_algo_used = False
