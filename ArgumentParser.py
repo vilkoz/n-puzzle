@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import argparse
-from Heruistics import manhattan_distance
+from Heruistics import manhattan_distance, linear_conflict
 from State import State
 
 def parse_arguments():
@@ -97,7 +97,7 @@ def validate_arguments(args):
         initial_state = shuffle(solved_state, 40)
     heruistics = {
             "manhattan": manhattan_distance,
-            "row": manhattan_distance,
+            "row": linear_conflict,
             "a_star": manhattan_distance
             }
     if args.algorithm == "all":
