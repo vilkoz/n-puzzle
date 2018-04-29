@@ -1,28 +1,11 @@
 #!/usr/bin/env python3
 import sys
+from ArgumentParser import parse_arguments, validate_arguments
 from npuzzle_view import NpuzzleView
 from OrderedHashSet import OrderedHashSet
 from State import State, set_f_score
 
 INF=10e15
-
-def heruistic_estimate(state_from, state_to):
-    size = len(state_to)**2
-    solved_coords = [[0,0] for _ in range(size)]
-    current_coords = [[0,0] for _ in range(size)]
-    for i, row in enumerate(state_to):
-        for j, item in enumerate(row):
-            solved_coords[item][0] = j
-            solved_coords[item][1] = i
-    for i, row in enumerate(state_from):
-        for j, item in enumerate(row):
-            current_coords[item][0] = j
-            current_coords[item][1] = i
-    h = 0
-    for i in range(size):
-        distance = sum([abs(x1 - x2) for x1, x2 in zip(solved_coords[i], current_coords[i])])
-        h += distance
-    return h
 
 def reconstruct_path(came_from, state):
     path = [state]
@@ -42,7 +25,7 @@ def shuffle(solved_state, times):
         tmp = s.makeOneRandomMove()
         if tmp:
             s = tmp
-    return s
+    return s.state
 
 class NpuzzleSolver:
 
@@ -95,7 +78,7 @@ class NpuzzleSolver:
                     continue
                 came_from[s] = e
                 g_score[s] = test_score
-                f_score[s] = test_score + heruistic_estimate(s.state, solved_state)
+                f_score[s] = test_score + self.heruistic_estimate(s.state, solved_state)
                 if s in closed_states:
                     continue
                 if s not in opened_states:
@@ -105,13 +88,19 @@ class NpuzzleSolver:
         print("cant solve")
         return ()
 
-def main():
-    size = 4
-    solved_state = [[y + x * size for y in range(1, 1 + size)] for x in range(size)]
-    solved_state[-1][-1] = 0
-    initial_state = shuffle(solved_state, int(sys.argv[1])).state
+def run_one_solver(initial_state, solved_state, heruistic_estimate):
     solver = NpuzzleSolver(initial_state, solved_state, heruistic_estimate);
     states = solver.solve()
+    return states
+
+def main():
+    args = parse_arguments()
+    initial_state, solved_state, selected_heruistics, is_one_algo_used = validate_arguments(args)
+    if is_one_algo_used:
+        states = run_one_solver(initial_state, solved_state, selected_heruistics)
+    else:
+        for heruistic_name in selected_heruistics:
+            states = run_one_solver(initial_state, solved_state, selected_heruistics[heruistic_name])
     view = NpuzzleView(states)
     view.display()
 
