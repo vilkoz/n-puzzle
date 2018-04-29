@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+from time import perf_counter
 from ArgumentParser import parse_arguments, validate_arguments
 from npuzzle_view import NpuzzleView
 from OrderedHashSet import OrderedHashSet
@@ -29,7 +30,8 @@ def shuffle(solved_state, times):
 
 class NpuzzleSolver:
 
-    def __init__(self, initial_state, solved_state, heruistic_estimate):
+    def __init__(self, initial_state, solved_state, heruistic_estimate, verbose):
+        self.verbose = verbose
         self.g_score = {}
         self.f_score = {}
         self.came_from = {}
@@ -43,6 +45,7 @@ class NpuzzleSolver:
         first_item = self.opened_states.getElem()
         self.g_score[first_item] = 0
         self.f_score[first_item] = self.heruistic_estimate(first_item.state, self.solved_state)
+        self.max_state_number = 0
 
     def select_optimal_state(self):
         return self.opened_states.getElem()
@@ -53,6 +56,8 @@ class NpuzzleSolver:
                 "score: ", self.g_score[e],
                 self.f_score[e] - self.g_score[e],
                 self.f_score[e])
+    def _update_max_state_count(self):
+        self.max_state_number = max(self.max_state_number, len(self.opened_states) + len(self.closed_states))
 
     def solve(self):
         opened_states = self.opened_states
@@ -64,11 +69,13 @@ class NpuzzleSolver:
 
         explored_states = 0
         while len(opened_states) >= 1:
+            self._update_max_state_count()
             e = self.select_optimal_state()
             explored_states += 1
-            print(e)
+            if self.verbose:
+                print(e)
             if e.state == solved_state:
-                print("solved: ", e.state, "explored_states:", explored_states)
+                print("Solved explored_states (time complexity):", explored_states, ", max_state_number(memory complexity):", self.max_state_number)
                 return reconstruct_path(came_from, e)
             opened_states.remove(e)
             closed_states.add(e)
@@ -83,24 +90,26 @@ class NpuzzleSolver:
                     continue
                 if s not in opened_states:
                     opened_states.add(s)
-            if e in f_score and e in g_score:
+            if self.verbose and e in f_score and e in g_score:
                 self._print_best_state_status(e)
         print("cant solve")
         return ()
 
-def run_one_solver(initial_state, solved_state, heruistic_estimate):
-    solver = NpuzzleSolver(initial_state, solved_state, heruistic_estimate);
+def run_one_solver(initial_state, solved_state, heruistic_estimate, verbose):
+    solver = NpuzzleSolver(initial_state, solved_state, heruistic_estimate, verbose);
+    start_time = perf_counter()
     states = solver.solve()
+    print("Compleated in %f seconds" % (perf_counter() - start_time))
     return states
 
 def main():
     args = parse_arguments()
     initial_state, solved_state, selected_heruistics, is_one_algo_used = validate_arguments(args)
     if is_one_algo_used:
-        states = run_one_solver(initial_state, solved_state, selected_heruistics)
+        states = run_one_solver(initial_state, solved_state, selected_heruistics, args.verbose)
     else:
         for heruistic_name in selected_heruistics:
-            states = run_one_solver(initial_state, solved_state, selected_heruistics[heruistic_name])
+            states = run_one_solver(initial_state, solved_state, selected_heruistics[heruistic_name], args.verbose)
     view = NpuzzleView(states)
     view.display()
 

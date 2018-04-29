@@ -5,6 +5,8 @@ from Heruistics import heruistic_estimate
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
+    parser.add_argument("-v", "--verbose", help="increase output verbosity",
+            action="store_true")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-f", "--file", type=str, help="file with map")
     group.add_argument("-g", "--generate", type=int, help="generate map with provided size", default=3)
@@ -18,8 +20,23 @@ def generate_solved_state(size):
     return solved_state
 
 def is_state_solvable(state):
-    # TODO
-    return True
+    # https://www.cs.princeton.edu/courses/archive/fall12/cos226/assignments/8puzzle.html
+    size = len(state)
+    inversions = 0;
+    flat = sum(state, [])
+    for i, num in enumerate(flat):
+        for val in flat[i:]:
+            if num != 0 and val != 0 and num > val:
+                inversions += 1
+    print("inversions", inversions)
+    if (size % 2) == 0:
+        for i, row in enumerate(state):
+            if 0 in row:
+                empty_row = i
+                break
+        return ((empty_row + inversions) % 2) != 0
+    else:
+        return (inversions % 2) == 0
 
 def is_valid_items(state, size):
     items = sum(state, []) # flatten list
@@ -43,7 +60,6 @@ def parse_file(file_name):
             if len(initial_state) == size:
                 break
             initial_state.append(current_row)
-    print(len(initial_state))
     if len(initial_state) > size:
         raise Exception("Invalid file format")
     if not is_valid_items(initial_state, size):
