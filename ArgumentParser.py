@@ -15,6 +15,8 @@ def parse_arguments():
             help="heruistics algorithm to solve N-puzzle", default="all", required=False)
     parser.add_argument("-i", "--iterations", type=int,
             help="how many times to shuffle board in map generation", default=20, required=False)
+    parser.add_argument("-p", "--plot_path",
+            help="plot solution path", action="store_true", required=False)
     return parser.parse_args();
 
 def generate_solved_state(size):
