@@ -4,7 +4,7 @@ from PyQt5 import QtGui
 from PyQt5.QtCore import (QAbstractTransition, QEasingCurve, QEvent,
         QParallelAnimationGroup, QPropertyAnimation, qrand, QRect,
         QSequentialAnimationGroup, qsrand, QState, QStateMachine, Qt, QTime,
-        QTimer)
+        QTimer, pyqtProperty)
 from PyQt5.QtWidgets import (QApplication, QGraphicsScene, QGraphicsView,
         QGraphicsWidget, QLabel)
 
@@ -21,9 +21,21 @@ class StateSwitchEvent(QEvent):
         return self.m_rand
 
 class QGraphicsRectWidget(QGraphicsWidget):
+
+    def __init__(self, parent=None):
+        super(QGraphicsRectWidget, self).__init__(parent)
+
     def paint(self, painter, option, widget):
         painter.fillRect(self.rect(), QtGui.QColor(205, 133, 63))
-        painter.drawText(self.rect().center(), self.windowTitle())
+        painter.drawText(self.rect().center(), self._text)
+
+    @pyqtProperty(str)
+    def text(self, text):
+        return self._text
+
+    @text.setter
+    def text(self, text):
+        self._text = text
 
 class StateSwitchTransition(QAbstractTransition):
     def __init__(self, rand):
@@ -77,7 +89,7 @@ def createGeometryStates(states, plates, parent, tile_size):
                     text = str(number)
                     # how to put another item to rect?
                     item.assignProperty(plates[number - 1], 'geometry', rect)
-                    item.assignProperty(plates[number - 1], 'windowTitle', text)
+                    item.assignProperty(plates[number - 1], 'text', text)
                 width += tile_size
             height += tile_size
         result.append(item)
