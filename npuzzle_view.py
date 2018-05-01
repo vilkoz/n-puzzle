@@ -20,10 +20,10 @@ class StateSwitchEvent(QEvent):
     def rand(self):
         return self.m_rand
 
-
 class QGraphicsRectWidget(QGraphicsWidget):
     def paint(self, painter, option, widget):
         painter.fillRect(self.rect(), QtGui.QColor(205, 133, 63))
+        painter.drawText(self.rect().center(), self.windowTitle())
 
 class StateSwitchTransition(QAbstractTransition):
     def __init__(self, rand):
@@ -62,7 +62,7 @@ class StateSwitcher(QState):
         self.addTransition(trans)
         trans.addAnimation(animation)
 
-def createGeometryStates(states, plates, parent):
+def createGeometryStates(states, plates, parent, tile_size):
     result = []
 
     for state in states:
@@ -73,11 +73,13 @@ def createGeometryStates(states, plates, parent):
             width = 1
             for number in row:
                 if number != 0:
-                    rect = QRect(width, height, 48, 48)
+                    rect = QRect(width, height, tile_size - 2, tile_size - 2)
+                    text = str(number)
                     # how to put another item to rect?
                     item.assignProperty(plates[number - 1], 'geometry', rect)
-                width += 50
-            height += 50
+                    item.assignProperty(plates[number - 1], 'windowTitle', text)
+                width += tile_size
+            height += tile_size
         result.append(item)
 
     return result
@@ -86,6 +88,7 @@ class NpuzzleView:
     def __init__(self, states):
         self.states = states
         self.size = len(states[0])
+        self.tile_size = 150
         print ("Scene size = {}".format(self.size))
     
     def print_state(self, state):
@@ -103,7 +106,7 @@ class NpuzzleView:
 
         app = QApplication(sys.argv)
 
-        scene = QGraphicsScene(0, 0, self.size * 50, self.size * 50)
+        scene = QGraphicsScene(0, 0, self.size * self.tile_size, self.size * self.tile_size)
         scene.setBackgroundBrush(QtGui.QColor(255, 255, 224))
 
         plates = []
@@ -133,7 +136,7 @@ class NpuzzleView:
         timer.setSingleShot(True)
         group.entered.connect(timer.start)
 
-        geometryState = createGeometryStates(self.states, plates, group)
+        geometryState = createGeometryStates(self.states, plates, group, self.tile_size)
 
         group.setInitialState(geometryState[0])
 
@@ -146,7 +149,7 @@ class NpuzzleView:
         machine.setInitialState(group)
         machine.start()
 
-        window.resize(self.size * 50, self.size * 50)
+        window.resize(self.size * self.tile_size, self.size * self.tile_size)
         window.show()
 
         qsrand(QTime(0, 0, 0).secsTo(QTime.currentTime()))
