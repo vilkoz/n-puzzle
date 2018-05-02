@@ -77,4 +77,11 @@ class NpuzzleView:
 
         qsrand(QTime(0, 0, 0).secsTo(QTime.currentTime()))
 
-        app.exec_()
+        returnCode = app.exec_()
+
+        del machine
+        del window
+        del scene
+        del app
+        
+        sys.exit(returnCode)
