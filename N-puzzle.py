@@ -2,7 +2,7 @@
 import sys
 from time import perf_counter
 from ArgumentParser import parse_arguments, validate_arguments
-from npuzzle_view import NpuzzleView
+from Visualization.NpuzzleView import NpuzzleView
 from OrderedHashSet import OrderedHashSet
 from State import State, set_f_score
 
