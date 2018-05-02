@@ -1,5 +1,4 @@
 from PyQt5.QtCore import (QAbstractTransition, QEvent, QRect, QState)
-# from PyQt5 import QtGui
 
 class StateSwitchEvent(QEvent):
     StateSwitchType = QEvent.User + 256
