@@ -1,100 +1,11 @@
 import sys
 
+from Visualization.RectWidget import QGraphicsRectWidget
+from Visualization.State import (createGeometryStates, StateSwitcher, StateSwitchTransition, StateSwitchEvent)
 from PyQt5 import QtGui
-from PyQt5.QtCore import (QAbstractTransition, QEasingCurve, QEvent,
-        QParallelAnimationGroup, QPropertyAnimation, qrand, QRect,
-        QSequentialAnimationGroup, qsrand, QState, QStateMachine, Qt, QTime,
-        QTimer, pyqtProperty)
-from PyQt5.QtWidgets import (QApplication, QGraphicsScene, QGraphicsView,
-        QGraphicsWidget, QLabel)
-
-
-class StateSwitchEvent(QEvent):
-    StateSwitchType = QEvent.User + 256
-
-    def __init__(self, rand=0):
-        super(StateSwitchEvent, self).__init__(StateSwitchEvent.StateSwitchType)
-
-        self.m_rand = rand
-
-    def rand(self):
-        return self.m_rand
-
-class QGraphicsRectWidget(QGraphicsWidget):
-
-    def __init__(self, parent=None):
-        super(QGraphicsRectWidget, self).__init__(parent)
-
-    def paint(self, painter, option, widget):
-        painter.fillRect(self.rect(), QtGui.QColor(205, 133, 63))
-        painter.drawText(self.rect().center(), self._text)
-
-    @pyqtProperty(str)
-    def text(self, text):
-        return self._text
-
-    @text.setter
-    def text(self, text):
-        self._text = text
-
-class StateSwitchTransition(QAbstractTransition):
-    def __init__(self, rand):
-        super(StateSwitchTransition, self).__init__()
-
-        self.m_rand = rand
-
-    def eventTest(self, event):
-        return (event.type() == StateSwitchEvent.StateSwitchType and
-                event.rand() == self.m_rand)
-
-    def onTransition(self, event):
-        pass
-
-
-class StateSwitcher(QState):
-    def __init__(self, machine):
-        super(StateSwitcher, self).__init__(machine)
-
-        self.stateCount = 0
-        self.lastViewIndex = 0
-
-    def onEntry(self, event):
-        self.machine().postEvent(StateSwitchEvent(self.lastViewIndex + 1))
-        self.lastViewIndex += 1
-        if self.lastViewIndex == self.stateCount:
-            self.lastViewIndex = 0
-
-    def onExit(self, event):
-        pass
-
-    def addState(self, state, animation):
-        self.stateCount += 1
-        trans = StateSwitchTransition(self.stateCount)
-        trans.setTargetState(state)
-        self.addTransition(trans)
-        trans.addAnimation(animation)
-
-def createGeometryStates(states, plates, parent, tile_size):
-    result = []
-
-    for state in states:
-        item = QState(parent)
-        
-        height = 1
-        for row in state:
-            width = 1
-            for number in row:
-                if number != 0:
-                    rect = QRect(width, height, tile_size - 2, tile_size - 2)
-                    text = str(number)
-                    # how to put another item to rect?
-                    item.assignProperty(plates[number - 1], 'geometry', rect)
-                    item.assignProperty(plates[number - 1], 'text', text)
-                width += tile_size
-            height += tile_size
-        result.append(item)
-
-    return result
+from PyQt5.QtCore import (QParallelAnimationGroup, QSequentialAnimationGroup, QPropertyAnimation,
+							QEasingCurve, Qt, QStateMachine, QState, QTimer, qsrand, QTime)
+from PyQt5.QtWidgets import (QApplication, QGraphicsScene, QGraphicsView)
 
 class NpuzzleView:
     def __init__(self, states):
@@ -103,7 +14,7 @@ class NpuzzleView:
         self.tile_size = 150
         print ("Scene size = {}".format(self.size))
     
-    def print_state(self, state):
+    def printState(self, state):
         s = ""
         for row in state:
             for item in row:
@@ -114,7 +25,7 @@ class NpuzzleView:
     def display(self):
         for i, state in enumerate(self.states):
             print("step number %d: " % (i))
-            self.print_state(state)
+            self.printState(state)
 
         app = QApplication(sys.argv)
 
