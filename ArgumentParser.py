@@ -17,6 +17,8 @@ def parse_arguments():
             help="how many times to shuffle board in map generation", default=20, required=False)
     parser.add_argument("-p", "--plot_path",
             help="plot solution path", action="store_true", required=False)
+    parser.add_argument("-d", "--draw_solution",
+            help="draw animated solution moves", action="store_true", required=False)
     return parser.parse_args();
 
 def generate_solved_state(size):

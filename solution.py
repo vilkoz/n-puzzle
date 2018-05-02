@@ -21,6 +21,7 @@ def reconstruct_path(came_from, state):
             current_state = path[-1]
         except KeyError:
             end = True
+    print("Solution lenght: %d" % len(path))
     return [x.state for x in reversed(path)]
 
 class NpuzzleSolver:
@@ -114,14 +115,21 @@ def run_one_solver(initial_state, solved_state, heruistic_estimate, args):
 def main():
     args = parse_arguments()
     initial_state, solved_state, selected_heruistics, is_one_algo_used = validate_arguments(args)
+    states = None
     if is_one_algo_used:
+        print("Solving with %s heruistics" % args.algorithm)
         states = run_one_solver(initial_state, solved_state, selected_heruistics, args)
     else:
         for heruistic_name in selected_heruistics:
             print("Solving with %s heruistics" % heruistic_name)
-            states = run_one_solver(initial_state, solved_state, selected_heruistics[heruistic_name], args)
-    view = NpuzzleView(states)
-    view.display()
+            new_states = run_one_solver(initial_state, solved_state, selected_heruistics[heruistic_name], args)
+            if states == None:
+                states = new_states
+            if len(new_states) < len(states):
+                states = new_states
+    if args.draw_solution:
+        view = NpuzzleView(states)
+        view.display()
 
 if __name__ == "__main__":
     main()
