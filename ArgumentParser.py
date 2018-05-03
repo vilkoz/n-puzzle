@@ -22,9 +22,14 @@ def parse_arguments():
     return parser.parse_args();
 
 def generate_solved_state(size):
-    solved_state = [[y + x * size for y in range(1, 1 + size)] for x in range(size)]
-    solved_state[-1][-1] = 0
-    return solved_state
+    state = [x for x in range(1,size**2)]
+    if size % 2 == 0:
+        empty_cell = (size**2) // 2 + (size // 2 - 1)
+    else:
+        empty_cell = (size**2) // 2
+    state.insert(empty_cell, 0)
+    state = [state[x*size:x*size+size] for x in range(size)]
+    return state
 
 def is_state_solvable(state):
     # https://www.cs.princeton.edu/courses/archive/fall12/cos226/assignments/8puzzle.html
