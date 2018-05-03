@@ -50,6 +50,11 @@ def is_valid_items(state, size):
     valid_items = [x for x in range(size**2)]
     return items == valid_items
 
+def remove_comments(line):
+    if '#' in line:
+        line = line[:line.index('#')]
+    return line
+
 def parse_file(file_name):
     with open(file_name, 'r') as f:
         initial_state = []
@@ -58,9 +63,10 @@ def parse_file(file_name):
             if line[0] == "#":
                 continue
             if not size:
+                line = remove_comments(line)
                 size = int(line.strip())
                 continue
-            current_row = [int(x) for x in line.strip().split()]
+            current_row = [int(x) for x in remove_comments(line).strip().split()]
             if len(current_row) > size:
                 raise Exception("Invalid file format")
             if len(initial_state) == size:
