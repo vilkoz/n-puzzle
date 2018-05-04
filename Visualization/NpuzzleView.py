@@ -6,6 +6,10 @@ from PyQt5 import QtGui
 from PyQt5.QtCore import (QParallelAnimationGroup, QSequentialAnimationGroup, QPropertyAnimation,
 							QEasingCurve, Qt, QStateMachine, QState, QTimer, qsrand, QTime)
 from PyQt5.QtWidgets import (QApplication, QGraphicsScene, QGraphicsView)
+import signal
+
+def signal_handler(signum, frame):
+    sys.exit(0)
 
 class NpuzzleView:
     def __init__(self, states):
@@ -77,6 +81,7 @@ class NpuzzleView:
 
         qsrand(QTime(0, 0, 0).secsTo(QTime.currentTime()))
 
+        signal.signal(signal.SIGINT, signal_handler)
         returnCode = app.exec_()
 
         del machine
