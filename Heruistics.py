@@ -73,7 +73,6 @@ def linear_conflict(state_from, state_to):
     linear_conflict = 0
     for i, row in enumerate(state_from):
         for j, item in enumerate(row):
-            # print("item ", item)
             if item == 0:
                 break
             item_goal = solved_coords[item]

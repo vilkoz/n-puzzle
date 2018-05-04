@@ -44,6 +44,8 @@ class NpuzzleSolver:
         self.max_state_number = 0
 
         self.graph = nx.Graph()
+        self.graph_nodes = []
+        self.graph_nodes_colors = []
 
     def select_optimal_state(self):
         return self.opened_states.getElem()
@@ -60,6 +62,8 @@ class NpuzzleSolver:
 
     def _update_graph(self, e):
         self.graph.add_node(e)
+        self.graph_nodes.append(e)
+        self.graph_nodes_colors.append(self.f_score.get(e, INF) - self.g_score.get(e, INF))
         parent = self.came_from.get(e, None)
         if parent:
             self.graph.add_edge(parent, e)
@@ -101,15 +105,27 @@ class NpuzzleSolver:
         print("cant solve")
         return ()
 
+def draw_solution_path(solver):
+    layout = nx.kamada_kawai_layout(solver.graph)
+    cmap = plt.cm.Blues
+    vmin = min(solver.graph_nodes_colors)
+    vmax = max(solver.graph_nodes_colors)
+    nx.draw_networkx(solver.graph, pos=layout, node_size=100, with_labels=False,
+            node_list=solver.graph_nodes, node_color=solver.graph_nodes_colors,
+            vmin=vmin, vmax=vmax, cmap=cmap
+            )
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=vmin, vmax=vmax))
+    sm._A = []
+    plt.colorbar(sm)
+    plt.show()
+
 def run_one_solver(initial_state, solved_state, heruistic_estimate, args):
     solver = NpuzzleSolver(initial_state, solved_state, heruistic_estimate, args.verbose);
     start_time = perf_counter()
     states = solver.solve()
     print("Compleated in %f seconds" % (perf_counter() - start_time))
     if args.plot_path:
-        layout = nx.kamada_kawai_layout(solver.graph)
-        nx.draw_networkx(solver.graph, pos=layout, node_size=100, with_labels=False,)
-        plt.show()
+        draw_solution_path(solver)
     return states
 
 def main():
