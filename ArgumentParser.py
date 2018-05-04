@@ -15,12 +15,21 @@ def parse_arguments():
             help="heruistics algorithm to solve N-puzzle", default="all", required=False)
     parser.add_argument("-i", "--iterations", type=int,
             help="how many times to shuffle board in map generation", default=20, required=False)
+    parser.add_argument("-p", "--plot_path",
+            help="plot solution path", action="store_true", required=False)
+    parser.add_argument("-d", "--draw_solution",
+            help="draw animated solution moves", action="store_true", required=False)
     return parser.parse_args();
 
 def generate_solved_state(size):
-    solved_state = [[y + x * size for y in range(1, 1 + size)] for x in range(size)]
-    solved_state[-1][-1] = 0
-    return solved_state
+    state = [x for x in range(1,size**2)]
+    if size % 2 == 0:
+        empty_cell = (size**2) // 2 + (size // 2 - 1)
+    else:
+        empty_cell = (size**2) // 2
+    state.insert(empty_cell, 0)
+    state = [state[x*size:x*size+size] for x in range(size)]
+    return state
 
 def is_state_solvable(state):
     # https://www.cs.princeton.edu/courses/archive/fall12/cos226/assignments/8puzzle.html
@@ -46,6 +55,11 @@ def is_valid_items(state, size):
     valid_items = [x for x in range(size**2)]
     return items == valid_items
 
+def remove_comments(line):
+    if '#' in line:
+        line = line[:line.index('#')]
+    return line
+
 def parse_file(file_name):
     with open(file_name, 'r') as f:
         initial_state = []
@@ -54,9 +68,10 @@ def parse_file(file_name):
             if line[0] == "#":
                 continue
             if not size:
+                line = remove_comments(line)
                 size = int(line.strip())
                 continue
-            current_row = [int(x) for x in line.strip().split()]
+            current_row = [int(x) for x in remove_comments(line).strip().split()]
             if len(current_row) > size:
                 raise Exception("Invalid file format")
             if len(initial_state) == size:

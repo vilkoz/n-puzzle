@@ -58,6 +58,8 @@ class State:
         return hash(s)
 
     def __eq__(self, other):
+        if type(other) != type(self):
+            return False
         return (self.state) == (other.state)
 
     def __ne__(self, other):

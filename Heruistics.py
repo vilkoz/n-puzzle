@@ -25,14 +25,46 @@ def manhattan_distance(state_from, state_to):
     return h
 
 def hamming_distance(state_from, state_to):
-    size = len(state_to)
+    size = len(state_to)**2
+    current_coords, solved_coords = _calculate_coords(state_from, state_to, size)
     h = 0
     for i in range(size):
-        for j in range(size):
-            if state_from[i][j] != state_to[i][j]:
-                h += 1
-    return h
+        if i == 0:
+            continue
+        distance = sum([abs(x1 - x2) for x1, x2 in zip(solved_coords[i], current_coords[i])])
+        h += distance
+    return h * 3
 
+def is_item_conflicts(item_pos, item_goal, conflicted_pos, conflicted_goal, axis):
+    # print("item_pos: ", item_pos, "item_goal:", item_goal, "conflicted_pos:", conflicted_pos, "conflicted_goal:", conflicted_goal)
+    if item_goal == conflicted_pos or\
+        item_pos == conflicted_goal:
+        # print("conflicts")
+        return 1
+    if item_goal[axis] > conflicted_pos[axis] or\
+        item_pos[axis] < conflicted_goal[axis]:
+        return 1
+    return 0
+
+def find_conflicting_item(item_pos, item_goal, state_from, solved_coords, current_coords, i, j):
+    linear_conflict = 0
+    for x in range(j + 1, len(state_from)):
+        # print("x = ", x)
+        conflicted_elem = state_from[i][x]
+        # print("conflicted_elem:", conflicted_elem)
+        if conflicted_elem == 0:
+            continue
+        linear_conflict += is_item_conflicts(
+                item_pos, item_goal, current_coords[conflicted_elem], solved_coords[conflicted_elem], 1)
+    for y in range(i + 1, len(state_from)):
+        # print("y = ", y)
+        conflicted_elem = state_from[y][j]
+        # print("conflicted_elem:", conflicted_elem)
+        if conflicted_elem == 0:
+            continue
+        linear_conflict += is_item_conflicts(
+                item_pos, item_goal, solved_coords[conflicted_elem], current_coords[conflicted_elem], 0)
+    return linear_conflict
 
 def linear_conflict(state_from, state_to):
     size = len(state_to)**2
@@ -47,33 +79,27 @@ def linear_conflict(state_from, state_to):
     linear_conflict = 0
     for i, row in enumerate(state_from):
         for j, item in enumerate(row):
+            # print("item ", item)
             if item == 0:
                 break
-            # print("------------------------------------------------------------")
-            # print("item:",item)
-            goal = solved_coords[item]
-            # print("goal", goal)
-            # print("range", j, len(state_from))
-            for x in range(j + 1, len(state_from)):
-                conflicted_elem = state_from[i][x]
-                # print("conflicted_elem x", conflicted_elem)
-                if conflicted_elem == 0:
-                    continue
-                conflicted_goal = solved_coords[conflicted_elem]
-                # print("conflicted_goal x", conflicted_goal)
-                if goal[1] == conflicted_goal[1] and (goal == [x, i] or conflicted_goal == [j, i]):
-                    linear_conflict += 1
-                    # print("conflict")
-            for y in range(i + 1, len(state_from)):
-                conflicted_elem = state_from[y][j]
-                # print("conflicted_elem y", conflicted_elem)
-                if conflicted_elem == 0:
-                    continue
-                conflicted_goal = solved_coords[conflicted_elem]
-                # print("conflicted_goal y", conflicted_goal)
-                if goal[0] == conflicted_goal[0] and (goal == [j, y] or conflicted_goal == [j, i]):
-                    linear_conflict += 1
-                    # print("conflict")
-            # print("------------------------------------------------------------")
+            item_goal = solved_coords[item]
+            item_pos = current_coords[item]
+            linear_conflict += find_conflicting_item(item_pos, item_goal,
+                    state_from, solved_coords, current_coords, i, j)
     # print("conflicts", linear_conflict)
     return h + 2*linear_conflict
+
+if __name__ == "__main__":
+    state_from = [
+            [2,3,1],
+            [4,5,6],
+            [7,8,0]
+            ]
+    state_to = [
+            [1,2,3],
+            [4,5,6],
+            [7,8,0]
+            ]
+    print("manhattan_distance: ", manhattan_distance(state_from, state_to))
+    print("linear_conflict: ", linear_conflict(state_from, state_to))
+    print("hamming_distance: ", hamming_distance(state_from, state_to))
