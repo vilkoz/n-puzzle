@@ -36,10 +36,8 @@ def hamming_distance(state_from, state_to):
     return h * 3
 
 def is_item_conflicts(item_pos, item_goal, conflicted_pos, conflicted_goal, axis):
-    # print("item_pos: ", item_pos, "item_goal:", item_goal, "conflicted_pos:", conflicted_pos, "conflicted_goal:", conflicted_goal)
     if item_goal == conflicted_pos or\
         item_pos == conflicted_goal:
-        # print("conflicts")
         return 1
     if item_goal[axis] > conflicted_pos[axis] or\
         item_pos[axis] < conflicted_goal[axis]:
@@ -49,17 +47,13 @@ def is_item_conflicts(item_pos, item_goal, conflicted_pos, conflicted_goal, axis
 def find_conflicting_item(item_pos, item_goal, state_from, solved_coords, current_coords, i, j):
     linear_conflict = 0
     for x in range(j + 1, len(state_from)):
-        # print("x = ", x)
         conflicted_elem = state_from[i][x]
-        # print("conflicted_elem:", conflicted_elem)
         if conflicted_elem == 0:
             continue
         linear_conflict += is_item_conflicts(
                 item_pos, item_goal, current_coords[conflicted_elem], solved_coords[conflicted_elem], 1)
     for y in range(i + 1, len(state_from)):
-        # print("y = ", y)
         conflicted_elem = state_from[y][j]
-        # print("conflicted_elem:", conflicted_elem)
         if conflicted_elem == 0:
             continue
         linear_conflict += is_item_conflicts(
@@ -86,7 +80,6 @@ def linear_conflict(state_from, state_to):
             item_pos = current_coords[item]
             linear_conflict += find_conflicting_item(item_pos, item_goal,
                     state_from, solved_coords, current_coords, i, j)
-    # print("conflicts", linear_conflict)
     return h + 2*linear_conflict
 
 if __name__ == "__main__":
